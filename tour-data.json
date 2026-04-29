@@ -6,13 +6,29 @@
       "id": "sc_gbuurki",
       "name": "IMG_20260423_165413_00_035",
       "imageUrl": "photos/sc_gbuurki.jpg",
-      "hotspots": []
+      "hotspots": [
+        {
+          "id": "sc_nn4qbgf",
+          "yaw": -158.7,
+          "pitch": -12.8,
+          "label": "aaa",
+          "targetId": "sc_4tn53p4"
+        }
+      ]
     },
     {
       "id": "sc_4tn53p4",
       "name": "IMG_20260423_165445_00_036",
       "imageUrl": "photos/sc_4tn53p4.jpg",
-      "hotspots": []
+      "hotspots": [
+        {
+          "id": "sc_3iu42mj",
+          "yaw": 161.7,
+          "pitch": 11.1,
+          "label": "aaaaa",
+          "targetId": "sc_gbuurki"
+        }
+      ]
     }
   ]
 }
