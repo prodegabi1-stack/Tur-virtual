@@ -1,17 +1,17 @@
 {
   "name": "Tur Virtual",
-  "defaultScene": "sc_8ttbjdv",
+  "defaultScene": "sc_gbuurki",
   "scenes": [
     {
-      "id": "sc_8ttbjdv",
+      "id": "sc_gbuurki",
       "name": "IMG_20260423_165413_00_035",
-      "imageUrl": "photos/sc_8ttbjdv.jpg",
+      "imageUrl": "photos/sc_gbuurki.jpg",
       "hotspots": []
     },
     {
-      "id": "sc_b165upm",
+      "id": "sc_4tn53p4",
       "name": "IMG_20260423_165445_00_036",
-      "imageUrl": "photos/sc_b165upm.jpg",
+      "imageUrl": "photos/sc_4tn53p4.jpg",
       "hotspots": []
     }
   ]

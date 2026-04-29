@@ -44,7 +44,7 @@ body{background:#0d0d0f;overflow:hidden;font-family:'Syne','Segoe UI',sans-serif
 <div id="transition-overlay"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marzipano/0.10.2/marzipano.js"></script>
 <script>
-const TOUR = {"name":"Tur Virtual","defaultScene":"sc_8ttbjdv","scenes":[{"id":"sc_8ttbjdv","name":"IMG_20260423_165413_00_035","imageUrl":"photos/sc_8ttbjdv.jpg","hotspots":[]},{"id":"sc_b165upm","name":"IMG_20260423_165445_00_036","imageUrl":"photos/sc_b165upm.jpg","hotspots":[]}]};
+const TOUR = {"name":"Tur Virtual","defaultScene":"sc_gbuurki","scenes":[{"id":"sc_gbuurki","name":"IMG_20260423_165413_00_035","imageUrl":"photos/sc_gbuurki.jpg","hotspots":[]},{"id":"sc_4tn53p4","name":"IMG_20260423_165445_00_036","imageUrl":"photos/sc_4tn53p4.jpg","hotspots":[]}]};
 let viewer, mscenes={}, currentId=null;
 
 function logError(msg) {
@@ -81,44 +81,45 @@ function switchScene(id) {
   overlay.style.opacity = '1';
   loader.style.display = 'block';
 
-  setTimeout(() => {
+  // Create scene immediately if it doesn't exist (faster)
+  if(!mscenes[id]) {
     try {
-      if(!mscenes[id]) {
-        const geo    = new Marzipano.EquirectGeometry([{width:4000}]);
-        const source = Marzipano.ImageUrlSource.fromString(sc.imageUrl);
-        const view   = new Marzipano.RectilinearView(
-          {yaw:0,pitch:0,fov:1.4},
-          Marzipano.RectilinearView.limit.traditional(4000, 100*Math.PI/180)
-        );
-        mscenes[id] = viewer.createScene({source,geometry:geo,view});
-        
-        mscenes[id].source().addEventListener('load', () => {
-          loader.style.display = 'none';
-          overlay.style.opacity = '0';
-        });
-
-        mscenes[id].source().addEventListener('error', () => {
-          logError("Nu s-a putut încărca imaginea: " + sc.imageUrl);
-          loader.style.display = 'none';
-          overlay.style.opacity = '0';
-        });
-      } else {
-        mscenes[id].switchTo({transitionDuration: 400});
-        loader.style.display = 'none';
-        overlay.style.opacity = '0';
-      }
-      
-      mscenes[id].switchTo({transitionDuration: 400});
-      currentId = id;
-      buildHotspots(sc);
-      document.getElementById('sn-name').textContent = sc.name;
-      document.getElementById('sn-meta').textContent = sc.hotspots.length + ' hotspot-uri';
-    } catch (err) {
-      logError("Switch error: " + err.message);
+      const geo    = new Marzipano.EquirectGeometry([{width:4000}]);
+      const source = Marzipano.ImageUrlSource.fromString(sc.imageUrl);
+      const view   = new Marzipano.RectilinearView(
+        {yaw:0,pitch:0,fov:1.4},
+        Marzipano.RectilinearView.limit.traditional(4000, 100*Math.PI/180)
+      );
+      mscenes[id] = viewer.createScene({source,geometry:geo,view});
+    } catch (e) {
+      logError("Eroare creare scenă: " + e.message);
       overlay.style.opacity = '0';
       loader.style.display = 'none';
+      return;
     }
-  }, 100);
+  }
+
+  const scene = mscenes[id];
+
+  // Wait for the image to actually load before showing the scene
+  const img = new Image();
+  img.onload = () => {
+    scene.switchTo({transitionDuration: 400});
+    currentId = id;
+    buildHotspots(sc);
+    document.getElementById('sn-name').textContent = sc.name;
+    document.getElementById('sn-meta').textContent = sc.hotspots.length + ' hotspot-uri';
+    loader.style.display = 'none';
+    overlay.style.opacity = '0';
+  };
+  
+  img.onerror = () => {
+    logError("Imagine lipsă: " + sc.imageUrl);
+    loader.style.display = 'none';
+    overlay.style.opacity = '0';
+  };
+  
+  img.src = sc.imageUrl;
 }
 
 function buildHotspots(sc) {
