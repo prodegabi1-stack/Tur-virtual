@@ -42,7 +42,7 @@ body{background:#0d0d0f;overflow:hidden;font-family:'Syne','Segoe UI',sans-serif
 <div id="transition-overlay"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marzipano/0.10.2/marzipano.js"></script>
 <script>
-const TOUR = {"name":"Tur Virtual","defaultScene":"sc_b48w8jp","scenes":[{"id":"sc_b48w8jp","name":"IMG_20260423_165413_00_035","imageUrl":"photos/sc_b48w8jp.jpg","hotspots":[{"id":"sc_b9nv729","yaw":-158.5,"pitch":-12.5,"label":"In pat","targetId":"sc_z7zrjnp"}]},{"id":"sc_z7zrjnp","name":"IMG_20260423_165445_00_036","imageUrl":"photos/sc_z7zrjnp.jpg","hotspots":[{"id":"sc_ca9jgxe","yaw":161.8,"pitch":12.2,"label":"PE MASA","targetId":"sc_b48w8jp"}]}]};
+const TOUR = {"name":"Tur Virtual","defaultScene":"sc_ggk81c7","scenes":[{"id":"sc_ggk81c7","name":"IMG_20260423_165413_00_035","imageUrl":"photos/sc_ggk81c7.jpg","hotspots":[{"id":"sc_y9iuaoj","yaw":-157.2,"pitch":-12.6,"label":"asa","targetId":"sc_hu5wt4o"}]},{"id":"sc_hu5wt4o","name":"IMG_20260423_165445_00_036","imageUrl":"photos/sc_hu5wt4o.jpg","hotspots":[{"id":"sc_8lz61mp","yaw":161.6,"pitch":12.2,"label":"da","targetId":"sc_ggk81c7"}]}]};
 let viewer, mscenes={}, currentId=null;
 
 window.addEventListener('load', () => {
@@ -60,24 +60,26 @@ function switchScene(id) {
   overlay.style.opacity = '1';
 
   setTimeout(() => {
-    if(!mscenes[id]) {
-      const geo    = new Marzipano.EquirectGeometry([{width:4000}]);
-      const source = Marzipano.ImageUrlSource.fromString(sc.imageUrl);
-      const view   = new Marzipano.RectilinearView(
-        {yaw:0,pitch:0,fov:1.4},
-        Marzipano.RectilinearView.limit.traditional(
-          Marzipano.RectilinearView.limit.vfov(Math.PI/4,Math.PI),
-          Marzipano.RectilinearView.limit.hfov(Math.PI/4,2*Math.PI)
-        )
-      );
-      mscenes[id] = viewer.createScene({source,geometry:geo,view});
+    try {
+      if(!mscenes[id]) {
+        const geo    = new Marzipano.EquirectGeometry([{width:4000}]);
+        const source = Marzipano.ImageUrlSource.fromString(sc.imageUrl);
+        const view   = new Marzipano.RectilinearView(
+          {yaw:0,pitch:0,fov:1.4},
+          Marzipano.RectilinearView.limit.traditional(4000, 120*Math.PI/180)
+        );
+        mscenes[id] = viewer.createScene({source,geometry:geo,view});
+      }
+      mscenes[id].switchTo({transitionDuration:0});
+      currentId = id;
+      buildHotspots(sc);
+      document.getElementById('sn-name').textContent = sc.name;
+      document.getElementById('sn-meta').textContent = sc.hotspots.length + ' hotspot-uri';
+    } catch (err) {
+      console.error("Error switching scene:", err);
+    } finally {
+      overlay.style.opacity = '0';
     }
-    mscenes[id].switchTo({transitionDuration:0});
-    currentId = id;
-    buildHotspots(sc);
-    document.getElementById('sn-name').textContent = sc.name;
-    document.getElementById('sn-meta').textContent = sc.hotspots.length + ' hotspot-uri';
-    overlay.style.opacity = '0';
   }, 350);
 }
 
