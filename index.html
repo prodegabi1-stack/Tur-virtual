@@ -44,7 +44,7 @@ body{background:#0d0d0f;overflow:hidden;font-family:'Syne','Segoe UI',sans-serif
 <div id="transition-overlay"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marzipano/0.10.2/marzipano.js"></script>
 <script>
-const TOUR = {"name":"Tur Virtual","defaultScene":"sc_gbuurki","scenes":[{"id":"sc_gbuurki","name":"IMG_20260423_165413_00_035","imageUrl":"photos/sc_gbuurki.jpg","hotspots":[{"id":"sc_nn4qbgf","yaw":-158.7,"pitch":-12.8,"label":"aaa","targetId":"sc_4tn53p4"}]},{"id":"sc_4tn53p4","name":"IMG_20260423_165445_00_036","imageUrl":"photos/sc_4tn53p4.jpg","hotspots":[{"id":"sc_3iu42mj","yaw":161.7,"pitch":11.1,"label":"aaaaa","targetId":"sc_gbuurki"}]}]};
+const TOUR = {"name":"Tur Virtual","defaultScene":"sc_vl5riz4","scenes":[{"id":"sc_vl5riz4","name":"IMG_20260423_165413_00_035","imageUrl":"photos/sc_vl5riz4.jpg","hotspots":[]},{"id":"sc_dsup6pc","name":"IMG_20260423_165445_00_036","imageUrl":"photos/sc_dsup6pc.jpg","hotspots":[]}]};
 let viewer, mscenes={}, currentId=null;
 
 function logError(msg) {
@@ -62,12 +62,54 @@ window.addEventListener('load', () => {
       logError("Eroare: Marzipano.js nu s-a încărcat.");
       return;
     }
-    viewer = new Marzipano.Viewer(document.getElementById('pano'), {controls:{mouseViewMode:'drag'}});
+    const panoEl = document.getElementById('pano');
+    viewer = new Marzipano.Viewer(panoEl, {controls:{mouseViewMode:'drag'}});
+    
+    // Add double-click to move to nearest hotspot
+    panoEl.addEventListener('dblclick', (e) => {
+      if (!currentId || !mscenes[currentId]) return;
+      const view = mscenes[currentId].view();
+      const rect = panoEl.getBoundingClientRect();
+      const coords = view.screenToCoordinates({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      
+      handleDoubleClick(coords.yaw, coords.pitch);
+    });
+
     switchScene(TOUR.defaultScene);
   } catch (err) {
     logError("Init error: " + err.message);
   }
 });
+
+function handleDoubleClick(yaw, pitch) {
+  const sc = getScene(currentId);
+  if (!sc || !sc.hotspots.length) return;
+
+  let closest = null;
+  let minDist = 0.35; // approx 20 degrees in radians
+
+  sc.hotspots.forEach(hs => {
+    const hsYaw = hs.yaw * Math.PI / 180;
+    const hsPitch = hs.pitch * Math.PI / 180;
+    
+    // Simple angular distance
+    const dy = Math.abs(yaw - hsYaw);
+    const dp = Math.abs(pitch - hsPitch);
+    const dist = Math.sqrt(dy*dy + dp*dp);
+
+    if (dist < minDist) {
+      minDist = dist;
+      closest = hs;
+    }
+  });
+
+  if (closest && closest.targetId) {
+    switchScene(closest.targetId);
+  }
+}
 
 function getScene(id){ return TOUR.scenes.find(s=>s.id===id); }
 
