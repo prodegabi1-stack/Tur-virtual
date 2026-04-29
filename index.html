@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tur Virtual</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d0d0f;overflow:hidden;font-family:'Syne','Segoe UI',sans-serif;color:#f0ede8}
+#pano{width:100vw;height:100vh}
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10}
+#title-bar{position:absolute;top:20px;left:50%;transform:translateX(-50%);background:rgba(13,13,15,0.82);border:1px solid rgba(255,255,255,0.09);border-radius:40px;padding:8px 20px;font-size:13px;font-weight:600;letter-spacing:.04em;backdrop-filter:blur(14px)}
+#scene-name{position:absolute;bottom:24px;left:24px;background:rgba(13,13,15,0.82);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:10px 16px;backdrop-filter:blur(14px)}
+#scene-name strong{display:block;font-size:13px;font-weight:600}
+#scene-name small{font-size:11px;color:#6b6b72;margin-top:2px;display:block}
+#nav{position:absolute;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+.nav-btn{width:40px;height:40px;background:rgba(13,13,15,0.82);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#9b9ba3;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);transition:all .15s}
+.nav-btn:hover{color:#f0ede8;border-color:rgba(255,255,255,0.25)}
+.hotspot{position:absolute;transform:translate(-50%,-50%);cursor:pointer;pointer-events:auto}
+.hotspot-ring{width:34px;height:34px;border-radius:50%;background:rgba(200,240,96,0.15);border:2px solid #c8f060;display:flex;align-items:center;justify-content:center;font-size:13px;transition:transform .2s,background .2s;animation:pulse 2.5s ease-in-out infinite}
+.hotspot:hover .hotspot-ring{transform:scale(1.15);background:rgba(200,240,96,0.3);animation:none}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(200,240,96,0.3)}50%{box-shadow:0 0 0 8px rgba(200,240,96,0)}}
+.hotspot-tip{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:rgba(13,13,15,0.9);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:4px 9px;font-size:11px;font-weight:500;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;backdrop-filter:blur(8px)}
+.hotspot:hover .hotspot-tip{opacity:1}
+#transition-overlay{position:fixed;inset:0;background:#0d0d0f;opacity:0;pointer-events:none;transition:opacity .35s;z-index:50}
+</style>
+</head>
+<body>
+<div id="pano"></div>
+<div id="ui">
+  <div id="title-bar">Tur Virtual</div>
+  <div id="scene-name">
+    <strong id="sn-name">—</strong>
+    <small id="sn-meta">—</small>
+  </div>
+  <div id="nav">
+    <button class="nav-btn" onclick="zoomIn()" title="Zoom in">＋</button>
+    <button class="nav-btn" onclick="zoomOut()" title="Zoom out">－</button>
+    <button class="nav-btn" onclick="resetView()" title="Reset">⊙</button>
+  </div>
+</div>
+<div id="transition-overlay"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marzipano/0.10.2/marzipano.js"></script>
+<script>
+const TOUR = {"name":"Tur Virtual","defaultScene":"sc_b48w8jp","scenes":[{"id":"sc_b48w8jp","name":"IMG_20260423_165413_00_035","imageUrl":"photos/sc_b48w8jp.jpg","hotspots":[{"id":"sc_b9nv729","yaw":-158.5,"pitch":-12.5,"label":"In pat","targetId":"sc_z7zrjnp"}]},{"id":"sc_z7zrjnp","name":"IMG_20260423_165445_00_036","imageUrl":"photos/sc_z7zrjnp.jpg","hotspots":[{"id":"sc_ca9jgxe","yaw":161.8,"pitch":12.2,"label":"PE MASA","targetId":"sc_b48w8jp"}]}]};
+let viewer, mscenes={}, currentId=null;
+
+window.addEventListener('load', () => {
+  viewer = new Marzipano.Viewer(document.getElementById('pano'), {controls:{mouseViewMode:'drag'}});
+  switchScene(TOUR.defaultScene);
+});
+
+function getScene(id){ return TOUR.scenes.find(s=>s.id===id); }
+
+function switchScene(id) {
+  const sc = getScene(id);
+  if(!sc) return;
+
+  const overlay = document.getElementById('transition-overlay');
+  overlay.style.opacity = '1';
+
+  setTimeout(() => {
+    if(!mscenes[id]) {
+      const geo    = new Marzipano.EquirectGeometry([{width:4000}]);
+      const source = Marzipano.ImageUrlSource.fromString(sc.imageUrl);
+      const view   = new Marzipano.RectilinearView(
+        {yaw:0,pitch:0,fov:1.4},
+        Marzipano.RectilinearView.limit.traditional(
+          Marzipano.RectilinearView.limit.vfov(Math.PI/4,Math.PI),
+          Marzipano.RectilinearView.limit.hfov(Math.PI/4,2*Math.PI)
+        )
+      );
+      mscenes[id] = viewer.createScene({source,geometry:geo,view});
+    }
+    mscenes[id].switchTo({transitionDuration:0});
+    currentId = id;
+    buildHotspots(sc);
+    document.getElementById('sn-name').textContent = sc.name;
+    document.getElementById('sn-meta').textContent = sc.hotspots.length + ' hotspot-uri';
+    overlay.style.opacity = '0';
+  }, 350);
+}
+
+function buildHotspots(sc) {
+  document.querySelectorAll('.hotspot').forEach(e=>e.remove());
+  if(!mscenes[sc.id]) return;
+  const view = mscenes[sc.id].view();
+  sc.hotspots.forEach(hs => {
+    const el = document.createElement('div');
+    el.className = 'hotspot';
+    const target = getScene(hs.targetId);
+    el.innerHTML = '<div class="hotspot-ring">➜</div><div class="hotspot-tip">'+hs.label+(target?'<br><span style="opacity:.6;font-size:10px">→ '+target.name+'</span>':'')+'</div>';
+    el.addEventListener('click', () => switchScene(hs.targetId));
+    const pos = view.coordinatesToScreen({yaw:hs.yaw*Math.PI/180, pitch:hs.pitch*Math.PI/180});
+    if(pos){ el.style.left=pos.x+'px'; el.style.top=pos.y+'px'; }
+    document.getElementById('pano').appendChild(el);
+    view.addEventListener('change', () => {
+      const p2 = view.coordinatesToScreen({yaw:hs.yaw*Math.PI/180, pitch:hs.pitch*Math.PI/180});
+      if(p2){ el.style.display='block'; el.style.left=p2.x+'px'; el.style.top=p2.y+'px'; }
+      else el.style.display='none';
+    });
+  });
+}
+
+function zoomIn()    { if(!currentId||!mscenes[currentId]) return; const v=mscenes[currentId].view(); v.setFov(Math.max(0.5,v.fov()-0.15)); }
+function zoomOut()   { if(!currentId||!mscenes[currentId]) return; const v=mscenes[currentId].view(); v.setFov(Math.min(2.5,v.fov()+0.15)); }
+function resetView() { if(!currentId||!mscenes[currentId]) return; mscenes[currentId].view().setParameters({yaw:0,pitch:0,fov:1.4}); }
+</script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "name": "Tur Virtual",
+  "defaultScene": "sc_b48w8jp",
+  "scenes": [
+    {
+      "id": "sc_b48w8jp",
+      "name": "IMG_20260423_165413_00_035",
+      "imageUrl": "photos/sc_b48w8jp.jpg",
+      "hotspots": [
+        {
+          "id": "sc_b9nv729",
+          "yaw": -158.5,
+          "pitch": -12.5,
+          "label": "In pat",
+          "targetId": "sc_z7zrjnp"
+        }
+      ]
+    },
+    {
+      "id": "sc_z7zrjnp",
+      "name": "IMG_20260423_165445_00_036",
+      "imageUrl": "photos/sc_z7zrjnp.jpg",
+      "hotspots": [
+        {
+          "id": "sc_ca9jgxe",
+          "yaw": 161.8,
+          "pitch": 12.2,
+          "label": "PE MASA",
+          "targetId": "sc_b48w8jp"
+        }
+      ]
+    }
+  ]
+}
