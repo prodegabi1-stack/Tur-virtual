@@ -44,7 +44,7 @@ body{background:#0d0d0f;overflow:hidden;font-family:'Syne','Segoe UI',sans-serif
 <div id="transition-overlay"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marzipano/0.10.2/marzipano.js"></script>
 <script>
-const TOUR = {"name":"Tur Virtual","defaultScene":"sc_vl5riz4","scenes":[{"id":"sc_vl5riz4","name":"IMG_20260423_165413_00_035","imageUrl":"photos/sc_vl5riz4.jpg","hotspots":[]},{"id":"sc_dsup6pc","name":"IMG_20260423_165445_00_036","imageUrl":"photos/sc_dsup6pc.jpg","hotspots":[]}]};
+const TOUR = {"name":"Tur Virtual","defaultScene":"f0z19xv","scenes":[{"id":"f0z19xv","name":"IMG_20260423_165413_00_035","imageUrl":"photos/f0z19xv.jpg","hotspots":[{"id":"t8fu6jb","yaw":-158.9,"pitch":-11.2,"label":"aaa","targetId":"87c7vq7"}]},{"id":"87c7vq7","name":"IMG_20260423_165445_00_036","imageUrl":"photos/87c7vq7.jpg","hotspots":[{"id":"n8ojm40","yaw":161.7,"pitch":11.2,"label":"asa","targetId":"f0z19xv"}]}]};
 let viewer, mscenes={}, currentId=null;
 
 function logError(msg) {
@@ -85,20 +85,25 @@ window.addEventListener('load', () => {
 });
 
 function handleDoubleClick(yaw, pitch) {
+  console.log("Double click coords (rad):", yaw, pitch);
   const sc = getScene(currentId);
   if (!sc || !sc.hotspots.length) return;
 
   let closest = null;
-  let minDist = 0.35; // approx 20 degrees in radians
+  let minDist = 0.5; // Aproximativ 30 grade radius
 
   sc.hotspots.forEach(hs => {
     const hsYaw = hs.yaw * Math.PI / 180;
     const hsPitch = hs.pitch * Math.PI / 180;
     
-    // Simple angular distance
-    const dy = Math.abs(yaw - hsYaw);
+    // Distanta unghiulara corecta (cu wrap-around pentru Yaw)
+    let dy = Math.abs(yaw - hsYaw);
+    if (dy > Math.PI) dy = 2 * Math.PI - dy;
+    
     const dp = Math.abs(pitch - hsPitch);
     const dist = Math.sqrt(dy*dy + dp*dp);
+
+    console.log("Verific hotspot " + hs.label + ": distanta unghiulara = " + dist.toFixed(3));
 
     if (dist < minDist) {
       minDist = dist;
@@ -107,7 +112,10 @@ function handleDoubleClick(yaw, pitch) {
   });
 
   if (closest && closest.targetId) {
+    console.log("Navighez automat spre:", closest.label);
     switchScene(closest.targetId);
+  } else {
+    console.log("Niciun hotspot destul de aproape de punctul de click.");
   }
 }
 
